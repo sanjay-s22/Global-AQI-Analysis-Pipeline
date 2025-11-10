@@ -1,0 +1,27 @@
+# --- Project Specific Ignores ---
+
+# 1. Ignore the large raw data file
+global_aqi_project_data.csv
+
+# 2. Ignore Jupyter Notebooks and Checkpoints
+*.ipynb
+.ipynb_checkpoints/
+
+# 3. Ignore Sensitive Credentials (If using environment variables)
+.env
+.env.local
+.envfile
+
+# --- General Python/System Ignores ---
+
+# 4. Compiled Python files
+__pycache__/
+*.pyc
+
+# 5. Virtual environments
+venv/
+env/
+
+# 6. Operating System files
+.DS_Store
+Thumbs.db

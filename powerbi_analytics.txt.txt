@@ -1,0 +1,108 @@
+# ====================================================================
+# GLOBAL AQI PIPELINE ANALYTICS DEFINITIONS
+# Contains all SQL queries and DAX formulas for Power BI.
+# Use these formulas for import and modeling in Power BI Desktop.
+# ====================================================================
+
+
+# -----------------------------------------------------
+# 1. SQL QUERIES (Import 5 times via "Get Data -> MySQL Advanced Options")
+# -----------------------------------------------------
+
+-- QUERY 1: Top 10 Most Polluted Cities (Rename to: Top 10 Cities)
+SELECT
+    City,
+    Country,
+    ROUND(AVG(`AQI Value`), 0) AS avg_aqi
+FROM aqi_project.global_aqi
+GROUP BY City, Country
+ORDER BY avg_aqi DESC
+LIMIT 10;
+
+-- QUERY 2: Main Pollutant Breakdown (Rename to: Pollutant Breakdown)
+SELECT
+    `Main Pollutant`,
+    COUNT(`City`) AS pollutant_city_count
+FROM aqi_project.global_aqi
+GROUP BY `Main Pollutant`
+ORDER BY pollutant_city_count DESC;
+
+-- QUERY 3: Hazardous Cities by Country (Rename to: Hazardous City Count)
+SELECT
+    Country,
+    COUNT(CASE WHEN `AQI Value` > 300 THEN 1 END) AS hazardous_city_count
+FROM aqi_project.global_aqi
+GROUP BY Country
+HAVING hazardous_city_count > 0
+ORDER BY hazardous_city_count DESC;
+
+-- QUERY 4: Top 10 Most Polluted Countries (Rename to: Top 10 Countries)
+SELECT
+    Country,
+    ROUND(AVG(`AQI Value`), 0) AS average_country_aqi
+FROM aqi_project.global_aqi
+GROUP BY Country
+ORDER BY average_country_aqi DESC
+LIMIT 10;
+
+-- QUERY 5: Max Polluted City per Country (Rename to: Max AQI City per Country)
+WITH RankedAQI AS (
+    SELECT
+        City,
+        Country,
+        `AQI Value` AS max_aqi,
+        ROW_NUMBER() OVER(PARTITION BY Country ORDER BY `AQI Value` DESC) as rn
+    FROM aqi_project.global_aqi
+)
+SELECT
+    City,
+    Country,
+    max_aqi
+FROM RankedAQI
+WHERE rn = 1
+ORDER BY max_aqi DESC;
+
+
+# -----------------------------------------------------
+# 2. DAX FORMULAS (To be applied in Power BI Modeling view)
+# -----------------------------------------------------
+
+-- DAX 1 (MEASURE): Overall Avg AQI
+Overall Avg AQI =
+    ROUND(
+        AVERAGE('global_aqi'[AQI Value]),
+        0
+    )
+
+-- DAX 2 (CALCULATED COLUMN): AQI Status
+AQI Status =
+    SWITCH(
+        TRUE(),
+        'global_aqi'[AQI Value] <= 50, "Good",
+        'global_aqi'[AQI Value] <= 100, "Moderate",
+        'global_aqi'[AQI Value] <= 150, "Unhealthy for Sensitive Groups",
+        'global_aqi'[AQI Value] <= 200, "Unhealthy",
+        'global_aqi'[AQI Value] <= 300, "Very Unhealthy",
+        "Hazardous"
+    )
+
+-- DAX 3 (MEASURE): Total City Count
+Total City Count =
+    COUNTROWS('global_aqi')
+
+-- DAX 4 (MEASURE): Hazardous City Count
+Hazardous City Count =
+    CALCULATE(
+        COUNT('global_aqi'[City]),
+        'global_aqi'[AQI Value] > 300
+    )
+
+-- DAX 5 (MEASURE): % of Unhealthy Cities
+% of Unhealthy Cities =
+    DIVIDE(
+        CALCULATE(
+            COUNTROWS('global_aqi'),
+            'global_aqi'[AQI Value] > 150
+        ),
+        COUNTROWS('global_aqi')
+    )

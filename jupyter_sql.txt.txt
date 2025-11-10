@@ -1,0 +1,19 @@
+%%sql
+# Use the correct database schema
+USE aqi_project;
+
+%%sql
+# Verify the tables exist (should show 'global_aqi')
+SHOW TABLES;
+
+%%sql
+# Check the total number of rows loaded
+SELECT COUNT(*) FROM global_aqi;
+
+%%sql
+# Inspect the first few rows to verify data integrity
+SELECT * FROM global_aqi LIMIT 5;
+
+%%sql
+# View the column structure and data types
+DESCRIBE global_aqi;
