@@ -2,7 +2,7 @@
 
 
 
-This project establishes a complete, reproducible data pipeline to ingest, store, process, and visualize global Air Quality Index (AQI) data.
+A data pipeline project designed to capture and analyze global Air Quality Index (AQI) data. The system moves data from raw CSV files into a MySQL database for immediate business intelligence visualization.
 
 
 
